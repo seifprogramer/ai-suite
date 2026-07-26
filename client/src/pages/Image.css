@@ -1,0 +1,74 @@
+.image-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+}
+
+.image-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(26, 31, 58, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.back-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 1rem;
+  margin-right: 1rem;
+  transition: all 0.2s;
+}
+
+.back-btn:hover {
+  transform: translateX(-3px);
+}
+
+.image-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.image-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.image-form textarea {
+  width: 100%;
+  padding: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  color: var(--text-light);
+  resize: vertical;
+}
+
+.image-form button {
+  align-self: flex-start;
+}
+
+.image-result {
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.image-result img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
