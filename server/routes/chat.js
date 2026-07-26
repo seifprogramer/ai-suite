@@ -14,7 +14,7 @@ function generateAIResponse(userMessage) {
     'I understand. Let me provide some insights...'
   ];
   
-  return responses[Math.floor(Math.random() * responses.length)] + ` You said: "${userMessage.substring(0, 50)}..."`;
+  return responses[Math.floor(Math.random() * responses.length)] + ` You said: "${userMessage.substring(0, 50)}"`;
 }
 
 // Send message
@@ -50,7 +50,8 @@ router.post('/message', auth, async (req, res) => {
 
 // Get chat history
 router.get('/history', auth, async (req, res) => {
-  try {\n    const chats = await ChatHistory.find({ userId: req.userId }).sort({ updatedAt: -1 });
+  try {
+    const chats = await ChatHistory.find({ userId: req.userId }).sort({ updatedAt: -1 });
     res.json(chats);
   } catch (error) {
     res.status(500).json({ error: error.message });
