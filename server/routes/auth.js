@@ -15,10 +15,15 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser, error: existError } = await supabase
       .from('users')
       .select('id')
       .or(`username.eq.${username},email.eq.${email}`);
+
+    if (existError) {
+      console.error('❌ Register - Check user error:', existError);
+      throw existError;
+    }
 
     if (existingUser && existingUser.length > 0) {
       return res.status(400).json({ error: 'User already exists' });
@@ -39,7 +44,10 @@ router.post('/register', async (req, res) => {
       ])
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Register - Insert error:', error);
+      throw error;
+    }
 
     const user = data[0];
     const token = jwt.sign(
@@ -48,11 +56,13 @@ router.post('/register', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    console.log('✅ User registered:', email);
     res.json({
       token,
       user: { id: user.id, username: user.username, email: user.email }
     });
   } catch (error) {
+    console.error('❌ Register error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -62,13 +72,21 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('🔍 Login attempt for:', email);
+
     // Find user
     const { data: users, error: selectError } = await supabase
       .from('users')
       .select('*')
       .eq('email', email);
 
-    if (selectError || !users || users.length === 0) {
+    if (selectError) {
+      console.error('❌ Login - Query error:', selectError);
+      throw selectError;
+    }
+
+    if (!users || users.length === 0) {
+      console.log('❌ User not found:', email);
       return res.status(400).json({ error: 'User not found' });
     }
 
@@ -76,6 +94,7 @@ router.post('/login', async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
+      console.log('❌ Invalid password for:', email);
       return res.status(400).json({ error: 'Invalid password' });
     }
 
@@ -85,11 +104,13 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    console.log('✅ User logged in:', email);
     res.json({
       token,
       user: { id: user.id, username: user.username, email: user.email }
     });
   } catch (error) {
+    console.error('❌ Login error:', error);
     res.status(500).json({ error: error.message });
   }
 });
