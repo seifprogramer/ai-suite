@@ -1,19 +1,22 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const supabase = require('../db/supabase');
 
 const router = express.Router();
 
-// Login
+// Login - Creates user if doesn't exist (no password verification)
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
 
     console.log('🔍 Login attempt for:', email);
 
     // Find user
-    const { data: users, error: selectError } = await supabase
+    let { data: users, error: selectError } = await supabase
       .from('users')
       .select('*')
       .eq('email', email);
@@ -23,19 +26,36 @@ router.post('/login', async (req, res) => {
       throw selectError;
     }
 
+    let user;
+
+    // If user doesn't exist, create them
     if (!users || users.length === 0) {
-      console.log('❌ User not found:', email);
-      return res.status(400).json({ error: 'User not found' });
+      console.log('📝 Creating new user:', email);
+      const { data: newUser, error: insertError } = await supabase
+        .from('users')
+        .insert([
+          {
+            username: email.split('@')[0], // Use email prefix as username
+            email: email,
+            password: 'no-password' // Placeholder
+          }
+        ])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('❌ Failed to create user:', insertError);
+        throw insertError;
+      }
+
+      user = newUser;
+      console.log('✅ New user created:', email);
+    } else {
+      user = users[0];
+      console.log('✅ Existing user found:', email);
     }
 
-    const user = users[0];
-    const isValidPassword = await bcrypt.compare(password, user.password);
-
-    if (!isValidPassword) {
-      console.log('❌ Invalid password for:', email);
-      return res.status(400).json({ error: 'Invalid password' });
-    }
-
+    // Generate JWT token
     const token = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET || 'secret',
