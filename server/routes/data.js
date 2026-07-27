@@ -1,13 +1,12 @@
 const express = require('express');
-const auth = require('../middleware/auth');
 const multer = require('multer');
 const supabase = require('../db/supabase');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// Analyze data
-router.post('/analyze', auth, upload.single('file'), async (req, res) => {
+// Analyze data - NO AUTH REQUIRED
+router.post('/analyze', upload.single('file'), async (req, res) => {
   try {
     const { query, chatId } = req.body;
     const file = req.file;
@@ -36,7 +35,7 @@ router.post('/analyze', auth, upload.single('file'), async (req, res) => {
       const { data } = await supabase
         .from('chat_history')
         .insert([{
-          user_id: req.userId,
+          user_id: '00000000-0000-0000-0000-000000000000', // Anonymous user
           tool: 'data',
           title: `Data Analysis: ${query.substring(0, 20)}`
         }])

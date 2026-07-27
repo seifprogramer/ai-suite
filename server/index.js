@@ -4,7 +4,6 @@ const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
 
-const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chat');
 const imageRoutes = require('./routes/image');
 const dataRoutes = require('./routes/data');
@@ -22,7 +21,6 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Routes
-app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/image', imageRoutes);
 app.use('/api/data', dataRoutes);

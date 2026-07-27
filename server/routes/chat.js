@@ -1,5 +1,4 @@
 const express = require('express');
-const auth = require('../middleware/auth');
 const supabase = require('../db/supabase');
 
 const router = express.Router();
@@ -14,11 +13,11 @@ function generateAIResponse(userMessage) {
     'I understand. Let me provide some insights...'
   ];
   
-  return responses[Math.floor(Math.random() * responses.length)] + ` You said: "${userMessage.substring(0, 50)}..."}`;
+  return responses[Math.floor(Math.random() * responses.length)] + ` You said: "${userMessage.substring(0, 50)}..."`;
 }
 
-// Send message
-router.post('/message', auth, async (req, res) => {
+// Send message - NO AUTH REQUIRED
+router.post('/message', async (req, res) => {
   try {
     const { chatId, message } = req.body;
     const io = req.app.get('io');
@@ -37,7 +36,7 @@ router.post('/message', auth, async (req, res) => {
       const { data } = await supabase
         .from('chat_history')
         .insert([{
-          user_id: req.userId,
+          user_id: '00000000-0000-0000-0000-000000000000', // Anonymous user
           tool: 'chat',
           title: message.substring(0, 30)
         }])
@@ -62,13 +61,12 @@ router.post('/message', auth, async (req, res) => {
   }
 });
 
-// Get chat history
-router.get('/history', auth, async (req, res) => {
+// Get chat history - NO AUTH REQUIRED
+router.get('/history', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('chat_history')
       .select('*')
-      .eq('user_id', req.userId)
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
@@ -78,8 +76,8 @@ router.get('/history', auth, async (req, res) => {
   }
 });
 
-// Get single chat
-router.get('/:chatId', auth, async (req, res) => {
+// Get single chat - NO AUTH REQUIRED
+router.get('/:chatId', async (req, res) => {
   try {
     const { data: chat, error: chatError } = await supabase
       .from('chat_history')
@@ -87,7 +85,7 @@ router.get('/:chatId', auth, async (req, res) => {
       .eq('id', req.params.chatId)
       .single();
 
-    if (chatError || !chat || chat.user_id !== req.userId) {
+    if (chatError || !chat) {
       return res.status(404).json({ error: 'Chat not found' });
     }
 

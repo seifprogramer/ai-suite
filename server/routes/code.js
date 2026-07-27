@@ -1,11 +1,10 @@
 const express = require('express');
-const auth = require('../middleware/auth');
 const supabase = require('../db/supabase');
 
 const router = express.Router();
 
-// Generate code
-router.post('/generate', auth, async (req, res) => {
+// Generate code - NO AUTH REQUIRED
+router.post('/generate', async (req, res) => {
   try {
     const { language, description, chatId } = req.body;
 
@@ -31,7 +30,7 @@ router.post('/generate', auth, async (req, res) => {
       const { data } = await supabase
         .from('chat_history')
         .insert([{
-          user_id: req.userId,
+          user_id: '00000000-0000-0000-0000-000000000000', // Anonymous user
           tool: 'code',
           title: `Code: ${description.substring(0, 20)}`
         }])

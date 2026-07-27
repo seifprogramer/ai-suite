@@ -1,5 +1,4 @@
 const express = require('express');
-const auth = require('../middleware/auth');
 const multer = require('multer');
 const supabase = require('../db/supabase');
 
@@ -15,8 +14,8 @@ function generateImage(prompt) {
   };
 }
 
-// Generate image from prompt
-router.post('/generate', auth, upload.single('file'), async (req, res) => {
+// Generate image from prompt - NO AUTH REQUIRED
+router.post('/generate', upload.single('file'), async (req, res) => {
   try {
     const { prompt, chatId } = req.body;
 
@@ -34,7 +33,7 @@ router.post('/generate', auth, upload.single('file'), async (req, res) => {
       const { data } = await supabase
         .from('chat_history')
         .insert([{
-          user_id: req.userId,
+          user_id: '00000000-0000-0000-0000-000000000000', // Anonymous user
           tool: 'image',
           title: prompt.substring(0, 30)
         }])
