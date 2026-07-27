@@ -1,7 +1,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const multer = require('multer');
-const ChatHistory = require('../models/ChatHistory');
+const supabase = require('../db/supabase');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -24,22 +24,35 @@ router.post('/analyze', auth, upload.single('file'), async (req, res) => {
       }
     };
 
-    let chat = await ChatHistory.findById(chatId);
-    if (!chat) {
-      chat = new ChatHistory({
-        userId: req.userId,
-        tool: 'data',
-        title: `Data Analysis: ${query.substring(0, 20)}`
-      });
+    let chat;
+    if (chatId) {
+      const { data } = await supabase
+        .from('chat_history')
+        .select('*')
+        .eq('id', chatId)
+        .single();
+      chat = data;
+    } else {
+      const { data } = await supabase
+        .from('chat_history')
+        .insert([{
+          user_id: req.userId,
+          tool: 'data',
+          title: `Data Analysis: ${query.substring(0, 20)}`
+        }])
+        .select()
+        .single();
+      chat = data;
     }
 
-    chat.messages.push(
-      { role: 'user', content: `Analyze: ${query}` },
-      { role: 'assistant', content: JSON.stringify(analysis) }
-    );
-    await chat.save();
+    await supabase
+      .from('chat_messages')
+      .insert([
+        { chat_id: chat.id, role: 'user', content: `Analyze: ${query}` },
+        { chat_id: chat.id, role: 'assistant', content: JSON.stringify(analysis) }
+      ]);
 
-    res.json({ ...analysis, chatId: chat._id });
+    res.json({ ...analysis, chatId: chat.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
